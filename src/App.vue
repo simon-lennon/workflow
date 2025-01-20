@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid h-100" @click="closeContextMenu">
+  <div class="container-fluid h-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">Workflow Builder</a>
@@ -49,16 +49,9 @@
             :default-viewport="{ x: 0, y: 0, zoom: 1.5 }"
             @connect="onConnect"
             @node-drag-stop="onNodeDragStop"
-            @click="closeContextMenu"
+            @edge-mousedown="onEdgeMouseDown"
+            @pane-click="closeContextMenu"
           >
-            <template #edge-default="{ id, sourceX, sourceY, targetX, targetY }" @mouseup.right.prevent="onEdgeContextMenu">
-              <path
-                :id="id"
-                :d="generatePath(sourceX, sourceY, targetX, targetY)"
-                class="vue-flow__edge-path"
-                @contextmenu.prevent="(e) => onEdgeContextMenu(e, { id })"
-              />
-            </template>
             <Background v-slot="background" pattern-color="#aaa" gap="8" />
             <MiniMap />
             <Controls />
@@ -68,14 +61,20 @@
               </button>
             </Panel>
           </VueFlow>
+          
           <!-- Edge context menu overlay -->
-          <EdgeContextMenu
-            v-if="contextMenu.visible"
-            :visible="contextMenu.visible"
-            :position="contextMenu.position"
-            @delete="deleteSelectedEdge"
-            @click.stop
-          />
+          <div 
+            v-if="contextMenu.visible" 
+            class="edge-context-menu"
+            :style="{ left: contextMenu.position.x + 'px', top: contextMenu.position.y + 'px' }"
+          >
+            <div class="menu-actions">
+              <button class="menu-button delete" @click="deleteSelectedEdge">
+                <span class="menu-icon">🗑️</span>
+                Delete Connection
+              </button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -89,7 +88,6 @@ import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
 import { Controls } from '@vue-flow/controls'
 import { useStore } from './stores/workflow'
-import EdgeContextMenu from './components/EdgeContextMenu.vue'
 import {
   ApprovalNode,
   ReviewNode,
@@ -131,21 +129,16 @@ const onNodeDragStop = (event, node) => {
   store.updateNodePosition(node.id, node.position)
 }
 
-const generatePath = (sourceX, sourceY, targetX, targetY) => {
-  const midX = sourceX + (targetX - sourceX) / 2
-  return `M${sourceX},${sourceY} C${midX},${sourceY} ${midX},${targetY} ${targetX},${targetY}`
-}
-
-const onEdgeContextMenu = (event, edge) => {
-  event.preventDefault()
-  event.stopPropagation()
-  contextMenu.value = {
-    visible: true,
-    position: {
-      x: event.clientX,
-      y: event.clientY
-    },
-    edge: edge
+const onEdgeMouseDown = (event, edge) => {
+  // Only show context menu on right click
+  if (event.button === 2) {
+    event.preventDefault()
+    event.stopPropagation()
+    contextMenu.value = {
+      visible: true,
+      position: { x: event.clientX, y: event.clientY },
+      edge: edge
+    }
   }
 }
 
@@ -157,11 +150,7 @@ const deleteSelectedEdge = () => {
   }
 }
 
-const closeContextMenu = (event) => {
-  // Don't close if clicking the menu itself
-  if (event?.target?.closest('.edge-context-menu')) {
-    return
-  }
+const closeContextMenu = () => {
   contextMenu.value.visible = false
 }
 
@@ -173,6 +162,18 @@ onMounted(() => {
   // Initialize with a start node
   const startNode = store.createNode('start')
   elements.value = [startNode]
+
+  // Close context menu when clicking outside
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.edge-context-menu')) {
+      contextMenu.value.visible = false
+    }
+  })
+
+  // Prevent default context menu
+  document.querySelector('.workflow-container').addEventListener('contextmenu', (e) => {
+    e.preventDefault()
+  })
 })
 
 onPaneReady(({ fitView }) => {
@@ -231,20 +232,24 @@ html, body, #app {
 }
 
 /* Vue Flow customization */
-.vue-flow__edge-path {
+.vue-flow__edge {
   stroke: #888;
   stroke-width: 2;
   cursor: pointer;
 }
 
-.vue-flow__edge-path:hover {
+.vue-flow__edge.selected {
   stroke: #2196F3;
-  stroke-width: 3;
 }
 
 .vue-flow__edge.animated {
   stroke-dasharray: 5;
   animation: dashdraw 0.5s linear infinite;
+}
+
+.vue-flow__edge:hover {
+  stroke: #2196F3;
+  stroke-width: 3;
 }
 
 @keyframes dashdraw {
@@ -262,5 +267,46 @@ html, body, #app {
 
 .vue-flow__handle:hover {
   background-color: #2196F3;
+}
+
+/* Context Menu */
+.edge-context-menu {
+  position: fixed;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  z-index: 1000;
+  min-width: 160px;
+}
+
+.menu-actions {
+  padding: 4px;
+}
+
+.menu-button {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 0.9em;
+  gap: 8px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.menu-button.delete {
+  color: #dc3545;
+}
+
+.menu-button.delete:hover {
+  background-color: #fff5f5;
+}
+
+.menu-icon {
+  font-size: 1.1em;
 }
 </style>
