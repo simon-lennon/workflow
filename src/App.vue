@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid">
+  <div class="container-fluid h-100">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">Workflow Builder</a>
@@ -19,10 +19,24 @@
       </div>
       <div class="col-md-9">
         <div class="workflow-container">
-          <VueFlow v-model="elements" class="workflow" :default-viewport="{ zoom: 1.5 }">
+          <VueFlow
+            v-model="elements"
+            :default-zoom="1.5"
+            :min-zoom="0.2"
+            :max-zoom="4"
+            class="workflow"
+            :default-viewport="{ x: 0, y: 0, zoom: 1.5 }"
+            :nodes="elements"
+            :edges="[]"
+          >
             <Background pattern-color="#aaa" gap="8" />
             <MiniMap />
             <Controls />
+            <Panel position="top-right">
+              <button class="btn btn-primary btn-sm" @click="onResetView">
+                Reset View
+              </button>
+            </Panel>
           </VueFlow>
         </div>
       </div>
@@ -32,15 +46,20 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { VueFlow, Background, MiniMap, Controls } from '@vue-flow/core'
+import { VueFlow, Background, MiniMap, Controls, Panel, useVueFlow } from '@vue-flow/core'
 import { useStore } from './stores/workflow'
 
 const store = useStore()
 const elements = ref([])
+const { onPaneReady, fitView } = useVueFlow()
 
 const addNode = (type) => {
   const newNode = store.createNode(type)
   elements.value = [...elements.value, newNode]
+}
+
+const onResetView = () => {
+  fitView({ padding: 0.2 })
 }
 
 onMounted(() => {
@@ -48,22 +67,49 @@ onMounted(() => {
   const startNode = store.createNode('start')
   elements.value = [startNode]
 })
-</script>
 
-<script>
-export default {
-  name: 'App'
-}
+onPaneReady(({ fitView }) => {
+  fitView()
+})
 </script>
 
 <style>
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .workflow-container {
   height: 80vh;
   border: 1px solid #ccc;
   border-radius: 4px;
+  background-color: #f8f9fa;
 }
 
 .workflow {
   height: 100%;
+}
+
+.vue-flow__node {
+  padding: 10px;
+  border-radius: 5px;
+  text-align: center;
+  min-width: 150px;
+}
+
+.vue-flow__node.node-task {
+  background-color: #2196F3;
+  color: white;
+}
+
+.vue-flow__node.node-condition {
+  background-color: #FFC107;
+  color: black;
+}
+
+.vue-flow__node.node-start {
+  background-color: #4CAF50;
+  color: white;
 }
 </style>
