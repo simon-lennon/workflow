@@ -1,9 +1,9 @@
 <template>
-  <BaseTaskNode 
+  <BaseTaskNode
     :id="id"
-    :selected="selected"
     type="review"
-    icon="📋"
+    :selected="selected"
+    :icon="reviewIcon"
   >
     <div class="review-info">
       <div class="info-row">
@@ -20,21 +20,9 @@
         <input 
           type="date"
           v-model="nodeData.dueDate"
-          class="date-input"
+          class="info-input"
           @change="updateNode"
         />
-      </div>
-      <div class="info-row">
-        <span class="info-label">Type:</span>
-        <select 
-          v-model="nodeData.reviewType" 
-          class="type-select"
-          @change="updateNode"
-        >
-          <option value="technical">Technical</option>
-          <option value="functional">Functional</option>
-          <option value="security">Security</option>
-        </select>
       </div>
     </div>
   </BaseTaskNode>
@@ -53,9 +41,15 @@ const props = defineProps({
 const store = useStore()
 const nodeData = ref({
   reviewer: '',
-  dueDate: '',
-  reviewType: 'technical'
+  dueDate: ''
 })
+
+const reviewIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#FF9800" stroke-width="2">
+    <path d="M2 12s3-6 10-6 10 6 10 6-3 6-10 6-10-6-10-6z" />
+    <circle cx="12" cy="12" r="3" />
+  </svg>
+`
 
 const updateNode = () => {
   store.updateNode(props.id, nodeData.value)
@@ -70,14 +64,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.task-type-review {
-  border-color: #ff9800;
-}
-
-.task-type-review .task-icon {
-  color: #ff9800;
-}
-
 .review-info {
   display: flex;
   flex-direction: column;
@@ -86,25 +72,25 @@ onMounted(() => {
 
 .info-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .info-label {
-  color: #666;
   font-size: 0.9em;
+  color: #666;
 }
 
-.info-input, .date-input, .type-select {
+.info-input {
   border: 1px solid #ddd;
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 4px 8px;
+  width: 140px;
   font-size: 0.9em;
-  width: 120px;
 }
 
-.info-input:focus, .date-input:focus, .type-select:focus {
+.info-input:focus {
   outline: none;
-  border-color: #ff9800;
+  border-color: #FF9800;
 }
 </style>
