@@ -20,9 +20,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import { Handle } from '@vue-flow/core'
-import { useWorkflowStore } from '@/stores/workflow'
+import { ref, onMounted } from 'vue';
+import { Handle } from '@vue-flow/core';
+import { storeToRefs } from 'pinia';
+import { useWorkflowStore } from '@/stores/workflow';
 
 const props = defineProps({
   id: {
@@ -41,24 +42,24 @@ const props = defineProps({
     type: Boolean,
     default: false
   }
-})
+});
 
-const store = useWorkflowStore()
+const store = useWorkflowStore();
 const nodeData = ref({
   label: '',
   type: props.type
-})
+});
 
 const updateNode = () => {
-  store.updateNode(props.id, nodeData.value)
-}
+  store.updateNode(props.id, nodeData.value);
+};
 
 onMounted(() => {
-  const node = store.getNode(props.id)
+  const node = store.getNode(props.id);
   if (node) {
-    nodeData.value = { ...node.data }
+    nodeData.value = { ...node.data };
   }
-})
+});
 </script>
 
 <style scoped>
