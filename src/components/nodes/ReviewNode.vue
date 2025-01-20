@@ -53,7 +53,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import BaseTaskNode from './BaseTaskNode.vue'
-import { useWorkflowStore } from '../../stores/workflow'
+import { useWorkflowStore } from '@/stores/workflow'
 
 const props = defineProps({
   id: { type: String, required: true },
