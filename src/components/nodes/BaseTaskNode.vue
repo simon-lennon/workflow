@@ -22,7 +22,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Handle } from '@vue-flow/core'
-import { useStore } from '../../stores/workflow'
+import { useWorkflowStore } from '../../stores/workflow'
 
 const props = defineProps({
   id: {
@@ -43,7 +43,7 @@ const props = defineProps({
   }
 })
 
-const store = useStore()
+const store = useWorkflowStore()
 const nodeData = ref({
   label: '',
   type: props.type
