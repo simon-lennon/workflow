@@ -1,11 +1,12 @@
 <template>
-  <div class="task-node" :class="[`task-type-${type}`, { selected }]">
+  <div class="task-node" :class="[`task-node-${type}`, { selected }]">
     <div class="task-header">
-      <span class="task-icon" v-if="icon">{{ icon }}</span>
+      <span class="task-icon" v-html="icon"></span>
       <input 
         v-model="nodeData.label" 
         class="header-input"
         @change="updateNode"
+        :placeholder="`Enter ${type} name`"
       />
     </div>
     <div class="task-body">
@@ -28,17 +29,17 @@ const props = defineProps({
     type: String,
     required: true
   },
-  selected: {
-    type: Boolean,
-    default: false
-  },
   type: {
     type: String,
     required: true
   },
   icon: {
     type: String,
-    default: ''
+    required: true
+  },
+  selected: {
+    type: Boolean,
+    default: false
   }
 })
 
@@ -75,18 +76,18 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 8px;
-  border-bottom: 1px solid #eee;
   padding-bottom: 8px;
   margin-bottom: 8px;
+  border-bottom: 1px solid #eee;
 }
 
 .task-icon {
-  font-size: 16px;
-  width: 24px;
-  height: 24px;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 24px;
+  height: 24px;
+  border-radius: 6px;
   flex-shrink: 0;
 }
 
@@ -95,18 +96,46 @@ onMounted(() => {
   font-weight: 500;
   width: 100%;
   background: transparent;
+  padding: 4px;
 }
 
 .header-input:focus {
   outline: none;
-  border-bottom: 1px dashed #666;
-}
-
-.task-body {
-  font-size: 0.9em;
+  background: #f8f9fa;
+  border-radius: 4px;
 }
 
 .task-node.selected {
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.2);
+  border-color: #2196F3;
+  box-shadow: 0 0 0 2px rgba(33, 150, 243, 0.3);
+}
+
+/* Node type specific styles */
+.task-node-approval {
+  border-color: #4CAF50;
+}
+
+.task-node-review {
+  border-color: #FF9800;
+}
+
+.task-node-todo {
+  border-color: #F44336;
+}
+
+.task-node-notification {
+  border-color: #9C27B0;
+}
+
+.task-node-docCollection {
+  border-color: #2196F3;
+}
+
+.task-node-systemTask {
+  border-color: #607D8B;
+}
+
+.task-node-taskCollection {
+  border-color: #795548;
 }
 </style>
