@@ -29,7 +29,7 @@
             :nodes="elements"
             :edges="[]"
           >
-            <Background pattern-color="#aaa" gap="8" />
+            <Background v-slot="background" pattern-color="#aaa" gap="8" />
             <MiniMap />
             <Controls />
             <Panel position="top-right">
@@ -46,7 +46,10 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { VueFlow, Background, MiniMap, Controls, Panel, useVueFlow } from '@vue-flow/core'
+import { VueFlow, Panel, useVueFlow } from '@vue-flow/core'
+import { Background } from '@vue-flow/background'
+import { MiniMap } from '@vue-flow/minimap'
+import { Controls } from '@vue-flow/controls'
 import { useStore } from './stores/workflow'
 
 const store = useStore()
