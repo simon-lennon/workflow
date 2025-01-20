@@ -1,39 +1,77 @@
 <template>
-  <div class="approval-node">
+  <div class="approval-node" :class="{ selected }">
     <div class="approval-header">
       <span class="approval-icon">✓</span>
-      {{ data.label }}
+      <input 
+        v-model="nodeData.label" 
+        class="header-input" 
+        @change="updateNode"
+      />
     </div>
     <div class="approval-body">
       <div class="approval-info">
         <div class="info-row">
           <span class="info-label">Approver:</span>
-          <span class="info-value">{{ data.approver || 'Not Set' }}</span>
+          <input 
+            v-model="nodeData.approver" 
+            class="info-input"
+            placeholder="Enter approver"
+            @change="updateNode"
+          />
         </div>
         <div class="info-row">
           <span class="info-label">Level:</span>
-          <span class="info-value">{{ data.level || '1' }}</span>
+          <select 
+            v-model="nodeData.level" 
+            class="level-select"
+            @change="updateNode"
+          >
+            <option value="1">Level 1</option>
+            <option value="2">Level 2</option>
+            <option value="3">Level 3</option>
+          </select>
         </div>
       </div>
     </div>
     <div class="approval-handles">
-      <Handle type="target" position="top" :style="{ top: '0px' }" />
-      <Handle type="source" position="bottom" :style="{ bottom: '0px' }" />
+      <Handle type="target" position="top" />
+      <Handle type="source" position="bottom" />
     </div>
   </div>
 </template>
 
 <script setup>
+import { ref, onMounted } from 'vue'
 import { Handle } from '@vue-flow/core'
+import { useStore } from '../stores/workflow'
 
-defineProps({
-  data: {
-    type: Object,
-    required: true,
+const props = defineProps({
+  id: {
+    type: String,
+    required: true
   },
   selected: {
     type: Boolean,
-    default: false,
+    default: false
+  }
+})
+
+const store = useStore()
+const nodeData = ref({
+  label: '',
+  approver: '',
+  level: '1'
+})
+
+const updateNode = () => {
+  store.updateNode(props.id, nodeData.value)
+}
+
+onMounted(() => {
+  // Get initial node data from store
+  const node = store.getNode(props.id)
+  if (node) {
+    nodeData.value = { ...node.data }
   }
 })
 </script>
@@ -53,11 +91,22 @@ defineProps({
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: bold;
-  color: #9c27b0;
   border-bottom: 1px solid #eee;
   padding-bottom: 8px;
   margin-bottom: 8px;
+}
+
+.header-input {
+  border: none;
+  font-weight: bold;
+  color: #9c27b0;
+  width: 100%;
+  background: transparent;
+}
+
+.header-input:focus {
+  outline: none;
+  border-bottom: 1px dashed #9c27b0;
 }
 
 .approval-icon {
@@ -70,6 +119,7 @@ defineProps({
   justify-content: center;
   border-radius: 50%;
   font-size: 12px;
+  flex-shrink: 0;
 }
 
 .approval-body {
@@ -90,10 +140,21 @@ defineProps({
 
 .info-label {
   color: #666;
+  flex-shrink: 0;
+  margin-right: 8px;
 }
 
-.info-value {
-  font-weight: 500;
+.info-input, .level-select {
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 0.9em;
+  width: 120px;
+}
+
+.info-input:focus, .level-select:focus {
+  outline: none;
+  border-color: #9c27b0;
 }
 
 .approval-node.selected {
