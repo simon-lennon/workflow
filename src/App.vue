@@ -49,7 +49,8 @@
             :default-viewport="{ x: 0, y: 0, zoom: 1.5 }"
             @connect="onConnect"
             @node-drag-stop="onNodeDragStop"
-            @edge-click="onEdgeClick"
+            @edge-contextmenu="onEdgeContextMenu"
+            @pane-click="closeContextMenu"
           >
             <Background v-slot="background" pattern-color="#aaa" gap="8" />
             <MiniMap />
@@ -59,7 +60,25 @@
                 Reset View
               </button>
             </Panel>
+            <!-- Edge context menu overlay -->
+            <EdgeContextMenu
+              :visible="contextMenu.visible"
+              :position="contextMenu.position"
+              @delete="deleteSelectedEdge"
+            />
           </VueFlow>
+        </div>
+      </div>
+    </div>
+
+    <!-- Delete confirmation modal -->
+    <div v-if="showDeleteModal" class="modal-overlay">
+      <div class="modal-content">
+        <h3>Delete Connection</h3>
+        <p>Are you sure you want to delete this connection?</p>
+        <div class="modal-actions">
+          <button class="btn btn-secondary" @click="showDeleteModal = false">Cancel</button>
+          <button class="btn btn-danger" @click="confirmDelete">Delete</button>
         </div>
       </div>
     </div>
@@ -73,6 +92,7 @@ import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
 import { Controls } from '@vue-flow/controls'
 import { useStore } from './stores/workflow'
+import EdgeContextMenu from './components/EdgeContextMenu.vue'
 import {
   ApprovalNode,
   ReviewNode,
@@ -86,6 +106,9 @@ import {
 const store = useStore()
 const elements = ref([])
 const edges = computed(() => store.getEdges())
+const contextMenu = ref({ visible: false, position: { x: 0, y: 0 }, edge: null })
+const showDeleteModal = ref(false)
+const edgeToDelete = ref(null)
 
 const { onPaneReady, fitView } = useVueFlow({
   nodeTypes: {
@@ -106,7 +129,6 @@ const addNode = (type) => {
 
 const onConnect = (params) => {
   const newEdge = store.addEdge(params)
-  // Force Vue Flow to update by reassigning edges array
   edges.value = [...edges.value]
 }
 
@@ -114,13 +136,25 @@ const onNodeDragStop = (event, node) => {
   store.updateNodePosition(node.id, node.position)
 }
 
-const onEdgeClick = (event, edge) => {
-  const result = confirm('Do you want to remove this connection?')
-  if (result) {
-    store.removeEdge(edge.id)
-    // Force Vue Flow to update
-    edges.value = [...edges.value]
+const onEdgeContextMenu = (event, edge) => {
+  event.preventDefault()
+  contextMenu.value = {
+    visible: true,
+    position: { x: event.clientX, y: event.clientY },
+    edge: edge
   }
+}
+
+const deleteSelectedEdge = () => {
+  if (contextMenu.value.edge) {
+    store.removeEdge(contextMenu.value.edge.id)
+    edges.value = [...edges.value]
+    contextMenu.value.visible = false
+  }
+}
+
+const closeContextMenu = () => {
+  contextMenu.value.visible = false
 }
 
 const onResetView = () => {
@@ -131,6 +165,13 @@ onMounted(() => {
   // Initialize with a start node
   const startNode = store.createNode('start')
   elements.value = [startNode]
+
+  // Close context menu when clicking outside
+  document.addEventListener('click', (event) => {
+    if (!event.target.closest('.edge-context-menu')) {
+      contextMenu.value.visible = false
+    }
+  })
 })
 
 onPaneReady(({ fitView }) => {
@@ -150,6 +191,7 @@ html, body, #app {
   border: 1px solid #ccc;
   border-radius: 4px;
   background-color: #f8f9fa;
+  position: relative;
 }
 
 .workflow {
@@ -217,5 +259,33 @@ html, body, #app {
 
 .vue-flow__handle:hover {
   background-color: #2196F3;
+}
+
+/* Modal styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.modal-content {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  min-width: 300px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
 }
 </style>
