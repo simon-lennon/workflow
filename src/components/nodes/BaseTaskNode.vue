@@ -22,7 +22,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Handle } from '@vue-flow/core'
-import { useWorkflowStore } from '../../stores/workflow'
+import { useWorkflowStore } from '@/stores/workflow'
 
 const props = defineProps({
   id: {
