@@ -10,8 +10,12 @@ import 'bootstrap/dist/js/bootstrap.bundle.min.js'
 import '@vue-flow/core/dist/style.css'
 import '@vue-flow/core/dist/theme-default.css'
 
+// Create app
 const app = createApp(App)
-const pinia = createPinia()
 
+// Initialize Pinia
+const pinia = createPinia()
 app.use(pinia)
+
+// Mount app
 app.mount('#app')
