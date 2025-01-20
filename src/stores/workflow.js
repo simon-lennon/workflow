@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 
-export const useStore = defineStore('workflow', {
+export const useWorkflowStore = defineStore('workflow', {
   state: () => ({
     nodeCount: 0,
     nodes: new Map(),
@@ -159,10 +159,10 @@ export const useStore = defineStore('workflow', {
       }
     },
 
-    addEdge(edge) {
-      const id = `e${edge.source}-${edge.target}`
+    addEdge(params) {
+      const id = `e${params.source}-${params.target}`
       const newEdge = {
-        ...edge,
+        ...params,
         id,
         animated: true,
         type: 'smoothstep'
@@ -178,5 +178,5 @@ export const useStore = defineStore('workflow', {
     getEdges() {
       return Array.from(this.edges.values())
     }
-  },
+  }
 })
