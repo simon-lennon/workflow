@@ -3,6 +3,7 @@ import { defineStore } from 'pinia'
 export const useStore = defineStore('workflow', {
   state: () => ({
     nodeCount: 0,
+    nodes: new Map(),
   }),
 
   actions: {
@@ -18,30 +19,34 @@ export const useStore = defineStore('workflow', {
         selectable: true,
       }
 
+      let node
       switch (type) {
         case 'start':
-          return {
+          node = {
             ...baseNode,
             type: 'default',
             class: 'node-start',
             data: { label: 'Start' },
           }
+          break
         case 'task':
-          return {
+          node = {
             ...baseNode,
             type: 'default',
             class: 'node-task',
             data: { label: `Task ${this.nodeCount}` },
           }
+          break
         case 'condition':
-          return {
+          node = {
             ...baseNode,
             type: 'default',
             class: 'node-condition',
             data: { label: `Condition ${this.nodeCount}` },
           }
+          break
         case 'approval':
-          return {
+          node = {
             ...baseNode,
             type: 'approval',
             data: {
@@ -50,9 +55,33 @@ export const useStore = defineStore('workflow', {
               level: '1'
             },
           }
+          break
         default:
-          return baseNode
+          node = baseNode
+      }
+
+      this.nodes.set(node.id, node)
+      return node
+    },
+
+    getNode(id) {
+      return this.nodes.get(id)
+    },
+
+    updateNode(id, data) {
+      const node = this.nodes.get(id)
+      if (node) {
+        node.data = { ...node.data, ...data }
+        this.nodes.set(id, node)
       }
     },
+
+    updateNodePosition(id, position) {
+      const node = this.nodes.get(id)
+      if (node) {
+        node.position = position
+        this.nodes.set(id, node)
+      }
+    }
   },
 })
