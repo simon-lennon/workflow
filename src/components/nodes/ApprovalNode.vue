@@ -1,9 +1,9 @@
 <template>
-  <BaseTaskNode 
+  <BaseTaskNode
     :id="id"
-    :selected="selected"
     type="approval"
-    icon="✓"
+    :selected="selected"
+    :icon="approvalIcon"
   >
     <div class="approval-info">
       <div class="info-row">
@@ -19,7 +19,7 @@
         <span class="info-label">Level:</span>
         <select 
           v-model="nodeData.level" 
-          class="level-select"
+          class="info-select"
           @change="updateNode"
         >
           <option value="1">Level 1</option>
@@ -47,6 +47,13 @@ const nodeData = ref({
   level: '1'
 })
 
+const approvalIcon = `
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="#4CAF50" stroke-width="2">
+    <circle cx="12" cy="12" r="10" />
+    <path d="M8 12l3 3 5-5" />
+  </svg>
+`
+
 const updateNode = () => {
   store.updateNode(props.id, nodeData.value)
 }
@@ -60,17 +67,6 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.task-type-approval {
-  border-color: #9c27b0;
-}
-
-.task-type-approval .task-icon {
-  background: #9c27b0;
-  color: white;
-  border-radius: 50%;
-  font-size: 12px;
-}
-
 .approval-info {
   display: flex;
   flex-direction: column;
@@ -79,25 +75,25 @@ onMounted(() => {
 
 .info-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .info-label {
-  color: #666;
   font-size: 0.9em;
+  color: #666;
 }
 
-.info-input, .level-select {
+.info-input, .info-select {
   border: 1px solid #ddd;
   border-radius: 4px;
-  padding: 2px 6px;
+  padding: 4px 8px;
+  width: 140px;
   font-size: 0.9em;
-  width: 120px;
 }
 
-.info-input:focus, .level-select:focus {
+.info-input:focus, .info-select:focus {
   outline: none;
-  border-color: #9c27b0;
+  border-color: #4CAF50;
 }
 </style>
