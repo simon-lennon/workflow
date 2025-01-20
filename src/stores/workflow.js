@@ -4,6 +4,7 @@ export const useStore = defineStore('workflow', {
   state: () => ({
     nodeCount: 0,
     nodes: new Map(),
+    edges: new Map()
   }),
 
   actions: {
@@ -17,6 +18,10 @@ export const useStore = defineStore('workflow', {
         draggable: true,
         connectable: true,
         selectable: true,
+        handles: {
+          source: true,
+          target: true
+        }
       }
 
       let node
@@ -63,7 +68,9 @@ export const useStore = defineStore('workflow', {
             data: {
               label: `Review ${this.nodeCount}`,
               reviewer: '',
-              dueDate: ''
+              dueDate: '',
+              status: 'pending',
+              comments: ''
             },
           }
           break
@@ -150,6 +157,26 @@ export const useStore = defineStore('workflow', {
         node.position = position
         this.nodes.set(id, node)
       }
+    },
+
+    addEdge(edge) {
+      const id = `e${edge.source}-${edge.target}`
+      const newEdge = {
+        ...edge,
+        id,
+        animated: true,
+        type: 'smoothstep'
+      }
+      this.edges.set(id, newEdge)
+      return newEdge
+    },
+
+    removeEdge(id) {
+      this.edges.delete(id)
+    },
+
+    getEdges() {
+      return Array.from(this.edges.values())
     }
   },
 })
