@@ -3,6 +3,9 @@
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">Workflow Builder</a>
+        <div class="navbar-text text-light">
+          <small>Double-click on connections to delete them</small>
+        </div>
       </div>
     </nav>
     <div class="row">
@@ -49,8 +52,8 @@
             :default-viewport="{ x: 0, y: 0, zoom: 1.5 }"
             @connect="onConnect"
             @node-drag-stop="onNodeDragStop"
-            @edge-mousedown="onEdgeMouseDown"
-            @pane-click="closeContextMenu"
+            @edge-double-click="onEdgeDoubleClick"
+            @edge-click="onEdgeClick"
           >
             <Background v-slot="background" pattern-color="#aaa" gap="8" />
             <MiniMap />
@@ -62,18 +65,9 @@
             </Panel>
           </VueFlow>
           
-          <!-- Edge context menu overlay -->
-          <div 
-            v-if="contextMenu.visible" 
-            class="edge-context-menu"
-            :style="{ left: contextMenu.position.x + 'px', top: contextMenu.position.y + 'px' }"
-          >
-            <div class="menu-actions">
-              <button class="menu-button delete" @click="deleteSelectedEdge">
-                <span class="menu-icon">🗑️</span>
-                Delete Connection
-              </button>
-            </div>
+          <!-- Delete confirmation tooltip -->
+          <div v-if="selectedEdge" class="edge-tooltip" :style="tooltipStyle">
+            Double-click to delete connection
           </div>
         </div>
       </div>
@@ -101,7 +95,13 @@ import {
 const store = useStore()
 const elements = ref([])
 const edges = computed(() => store.getEdges())
-const contextMenu = ref({ visible: false, position: { x: 0, y: 0 }, edge: null })
+const selectedEdge = ref(null)
+const tooltipPosition = ref({ x: 0, y: 0 })
+
+const tooltipStyle = computed(() => ({
+  left: `${tooltipPosition.value.x}px`,
+  top: `${tooltipPosition.value.y}px`
+}))
 
 const { onPaneReady, fitView } = useVueFlow({
   nodeTypes: {
@@ -129,29 +129,25 @@ const onNodeDragStop = (event, node) => {
   store.updateNodePosition(node.id, node.position)
 }
 
-const onEdgeMouseDown = (event, edge) => {
-  // Only show context menu on right click
-  if (event.button === 2) {
-    event.preventDefault()
-    event.stopPropagation()
-    contextMenu.value = {
-      visible: true,
-      position: { x: event.clientX, y: event.clientY },
-      edge: edge
+const onEdgeClick = (event, edge) => {
+  selectedEdge.value = edge
+  tooltipPosition.value = {
+    x: event.clientX + 10,
+    y: event.clientY - 30
+  }
+
+  // Hide tooltip after 2 seconds
+  setTimeout(() => {
+    if (selectedEdge.value === edge) {
+      selectedEdge.value = null
     }
-  }
+  }, 2000)
 }
 
-const deleteSelectedEdge = () => {
-  if (contextMenu.value.edge) {
-    store.removeEdge(contextMenu.value.edge.id)
-    edges.value = [...edges.value]
-    contextMenu.value.visible = false
-  }
-}
-
-const closeContextMenu = () => {
-  contextMenu.value.visible = false
+const onEdgeDoubleClick = (event, edge) => {
+  store.removeEdge(edge.id)
+  edges.value = [...edges.value]
+  selectedEdge.value = null
 }
 
 const onResetView = () => {
@@ -162,18 +158,6 @@ onMounted(() => {
   // Initialize with a start node
   const startNode = store.createNode('start')
   elements.value = [startNode]
-
-  // Close context menu when clicking outside
-  document.addEventListener('click', (event) => {
-    if (!event.target.closest('.edge-context-menu')) {
-      contextMenu.value.visible = false
-    }
-  })
-
-  // Prevent default context menu
-  document.querySelector('.workflow-container').addEventListener('contextmenu', (e) => {
-    e.preventDefault()
-  })
 })
 
 onPaneReady(({ fitView }) => {
@@ -269,44 +253,32 @@ html, body, #app {
   background-color: #2196F3;
 }
 
-/* Context Menu */
-.edge-context-menu {
+/* Edge Tooltip */
+.edge-tooltip {
   position: fixed;
-  background: white;
-  border: 1px solid #ddd;
+  background: rgba(0, 0, 0, 0.8);
+  color: white;
+  padding: 6px 10px;
   border-radius: 4px;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+  font-size: 12px;
+  pointer-events: none;
   z-index: 1000;
-  min-width: 160px;
+  animation: fadeIn 0.2s ease-in-out;
 }
 
-.menu-actions {
-  padding: 4px;
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.menu-button {
-  display: flex;
-  align-items: center;
-  width: 100%;
-  padding: 8px 12px;
-  border: none;
-  background: none;
-  cursor: pointer;
+.navbar-text {
   font-size: 0.9em;
-  gap: 8px;
-  border-radius: 4px;
-  text-align: left;
-}
-
-.menu-button.delete {
-  color: #dc3545;
-}
-
-.menu-button.delete:hover {
-  background-color: #fff5f5;
-}
-
-.menu-icon {
-  font-size: 1.1em;
+  opacity: 0.8;
 }
 </style>
