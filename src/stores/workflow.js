@@ -56,6 +56,74 @@ export const useStore = defineStore('workflow', {
             },
           }
           break
+        case 'review':
+          node = {
+            ...baseNode,
+            type: 'review',
+            data: {
+              label: `Review ${this.nodeCount}`,
+              reviewer: '',
+              dueDate: ''
+            },
+          }
+          break
+        case 'todo':
+          node = {
+            ...baseNode,
+            type: 'todo',
+            data: {
+              label: `Todo ${this.nodeCount}`,
+              assignee: '',
+              priority: 'medium',
+              dueDate: ''
+            },
+          }
+          break
+        case 'notification':
+          node = {
+            ...baseNode,
+            type: 'notification',
+            data: {
+              label: `Notification ${this.nodeCount}`,
+              recipients: [],
+              message: ''
+            },
+          }
+          break
+        case 'docCollection':
+          node = {
+            ...baseNode,
+            type: 'docCollection',
+            data: {
+              label: `Document Collection ${this.nodeCount}`,
+              documents: [],
+              requiredDocs: []
+            },
+          }
+          break
+        case 'systemTask':
+          node = {
+            ...baseNode,
+            type: 'systemTask',
+            data: {
+              label: `System Task ${this.nodeCount}`,
+              action: '',
+              parameters: {}
+            },
+          }
+          break
+        case 'taskCollection':
+          node = {
+            ...baseNode,
+            type: 'taskCollection',
+            data: {
+              label: `Task Collection ${this.nodeCount}`,
+              tasks: [],
+              owner: '',
+              dueDate: ''
+            },
+          }
+          break
         default:
           node = baseNode
       }
