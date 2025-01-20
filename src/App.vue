@@ -40,14 +40,16 @@
         <div class="workflow-container">
           <VueFlow
             v-model="elements"
+            :nodes="elements"
+            :edges="edges"
             :default-zoom="1.5"
             :min-zoom="0.2"
             :max-zoom="4"
             class="workflow"
             :default-viewport="{ x: 0, y: 0, zoom: 1.5 }"
-            :nodes="elements"
-            :edges="[]"
             @connect="onConnect"
+            @node-drag-stop="onNodeDragStop"
+            @edge-click="onEdgeClick"
           >
             <Background v-slot="background" pattern-color="#aaa" gap="8" />
             <MiniMap />
@@ -65,7 +67,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, computed } from 'vue'
 import { VueFlow, Panel, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
@@ -83,7 +85,7 @@ import {
 
 const store = useStore()
 const elements = ref([])
-const edges = ref([])
+const edges = computed(() => store.getEdges())
 
 const { onPaneReady, fitView } = useVueFlow({
   nodeTypes: {
@@ -103,12 +105,22 @@ const addNode = (type) => {
 }
 
 const onConnect = (params) => {
-  const newEdge = {
-    id: `e${params.source}-${params.target}`,
-    source: params.source,
-    target: params.target,
+  const newEdge = store.addEdge(params)
+  // Force Vue Flow to update by reassigning edges array
+  edges.value = [...edges.value]
+}
+
+const onNodeDragStop = (event, node) => {
+  store.updateNodePosition(node.id, node.position)
+}
+
+const onEdgeClick = (event, edge) => {
+  const result = confirm('Do you want to remove this connection?')
+  if (result) {
+    store.removeEdge(edge.id)
+    // Force Vue Flow to update
+    edges.value = [...edges.value]
   }
-  edges.value = [...edges.value, newEdge]
 }
 
 const onResetView = () => {
@@ -173,5 +185,37 @@ html, body, #app {
 .btn-brown:hover {
   background-color: #5d4037;
   color: white;
+}
+
+/* Vue Flow customization */
+.vue-flow__edge {
+  stroke: #888;
+  stroke-width: 2;
+}
+
+.vue-flow__edge.selected {
+  stroke: #2196F3;
+}
+
+.vue-flow__edge.animated {
+  stroke-dasharray: 5;
+  animation: dashdraw 0.5s linear infinite;
+}
+
+@keyframes dashdraw {
+  from {
+    stroke-dashoffset: 10;
+  }
+}
+
+.vue-flow__handle {
+  width: 8px;
+  height: 8px;
+  background-color: #555;
+  border: 2px solid white;
+}
+
+.vue-flow__handle:hover {
+  background-color: #2196F3;
 }
 </style>
