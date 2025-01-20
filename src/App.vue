@@ -1,5 +1,5 @@
 <template>
-  <div class="container-fluid h-100">
+  <div class="container-fluid h-100" @click="closeContextMenu">
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4">
       <div class="container-fluid">
         <a class="navbar-brand" href="#">Workflow Builder</a>
@@ -49,9 +49,16 @@
             :default-viewport="{ x: 0, y: 0, zoom: 1.5 }"
             @connect="onConnect"
             @node-drag-stop="onNodeDragStop"
-            @edge-contextmenu="onEdgeContextMenu"
-            @pane-click="closeContextMenu"
+            @click="closeContextMenu"
           >
+            <template #edge-default="{ id, sourceX, sourceY, targetX, targetY }" @mouseup.right.prevent="onEdgeContextMenu">
+              <path
+                :id="id"
+                :d="generatePath(sourceX, sourceY, targetX, targetY)"
+                class="vue-flow__edge-path"
+                @contextmenu.prevent="(e) => onEdgeContextMenu(e, { id })"
+              />
+            </template>
             <Background v-slot="background" pattern-color="#aaa" gap="8" />
             <MiniMap />
             <Controls />
@@ -60,25 +67,15 @@
                 Reset View
               </button>
             </Panel>
-            <!-- Edge context menu overlay -->
-            <EdgeContextMenu
-              :visible="contextMenu.visible"
-              :position="contextMenu.position"
-              @delete="deleteSelectedEdge"
-            />
           </VueFlow>
-        </div>
-      </div>
-    </div>
-
-    <!-- Delete confirmation modal -->
-    <div v-if="showDeleteModal" class="modal-overlay">
-      <div class="modal-content">
-        <h3>Delete Connection</h3>
-        <p>Are you sure you want to delete this connection?</p>
-        <div class="modal-actions">
-          <button class="btn btn-secondary" @click="showDeleteModal = false">Cancel</button>
-          <button class="btn btn-danger" @click="confirmDelete">Delete</button>
+          <!-- Edge context menu overlay -->
+          <EdgeContextMenu
+            v-if="contextMenu.visible"
+            :visible="contextMenu.visible"
+            :position="contextMenu.position"
+            @delete="deleteSelectedEdge"
+            @click.stop
+          />
         </div>
       </div>
     </div>
@@ -107,8 +104,6 @@ const store = useStore()
 const elements = ref([])
 const edges = computed(() => store.getEdges())
 const contextMenu = ref({ visible: false, position: { x: 0, y: 0 }, edge: null })
-const showDeleteModal = ref(false)
-const edgeToDelete = ref(null)
 
 const { onPaneReady, fitView } = useVueFlow({
   nodeTypes: {
@@ -136,11 +131,20 @@ const onNodeDragStop = (event, node) => {
   store.updateNodePosition(node.id, node.position)
 }
 
+const generatePath = (sourceX, sourceY, targetX, targetY) => {
+  const midX = sourceX + (targetX - sourceX) / 2
+  return `M${sourceX},${sourceY} C${midX},${sourceY} ${midX},${targetY} ${targetX},${targetY}`
+}
+
 const onEdgeContextMenu = (event, edge) => {
   event.preventDefault()
+  event.stopPropagation()
   contextMenu.value = {
     visible: true,
-    position: { x: event.clientX, y: event.clientY },
+    position: {
+      x: event.clientX,
+      y: event.clientY
+    },
     edge: edge
   }
 }
@@ -153,7 +157,11 @@ const deleteSelectedEdge = () => {
   }
 }
 
-const closeContextMenu = () => {
+const closeContextMenu = (event) => {
+  // Don't close if clicking the menu itself
+  if (event?.target?.closest('.edge-context-menu')) {
+    return
+  }
   contextMenu.value.visible = false
 }
 
@@ -165,13 +173,6 @@ onMounted(() => {
   // Initialize with a start node
   const startNode = store.createNode('start')
   elements.value = [startNode]
-
-  // Close context menu when clicking outside
-  document.addEventListener('click', (event) => {
-    if (!event.target.closest('.edge-context-menu')) {
-      contextMenu.value.visible = false
-    }
-  })
 })
 
 onPaneReady(({ fitView }) => {
@@ -230,13 +231,15 @@ html, body, #app {
 }
 
 /* Vue Flow customization */
-.vue-flow__edge {
+.vue-flow__edge-path {
   stroke: #888;
   stroke-width: 2;
+  cursor: pointer;
 }
 
-.vue-flow__edge.selected {
+.vue-flow__edge-path:hover {
   stroke: #2196F3;
+  stroke-width: 3;
 }
 
 .vue-flow__edge.animated {
@@ -259,33 +262,5 @@ html, body, #app {
 
 .vue-flow__handle:hover {
   background-color: #2196F3;
-}
-
-/* Modal styles */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 20px;
-  border-radius: 8px;
-  min-width: 300px;
-}
-
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 20px;
 }
 </style>
