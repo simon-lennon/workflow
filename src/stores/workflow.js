@@ -12,10 +12,12 @@ export const useStore = defineStore('workflow', {
       
       const baseNode = {
         id: `${type}-${this.nodeCount}`,
-        position,
         type: 'default',
+        position,
         class: `node-${type}`,
-        data: { label: `${type.charAt(0).toUpperCase() + type.slice(1)} ${this.nodeCount}` },
+        draggable: true,
+        connectable: true,
+        selectable: true,
       }
 
       switch (type) {
@@ -23,17 +25,16 @@ export const useStore = defineStore('workflow', {
           return {
             ...baseNode,
             data: { label: 'Start' },
-            style: { background: '#4CAF50', color: 'white' },
           }
         case 'task':
           return {
             ...baseNode,
-            style: { background: '#2196F3', color: 'white' },
+            data: { label: `Task ${this.nodeCount}` },
           }
         case 'condition':
           return {
             ...baseNode,
-            style: { background: '#FFC107' },
+            data: { label: `Condition ${this.nodeCount}` },
           }
         default:
           return baseNode
