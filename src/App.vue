@@ -8,12 +8,30 @@
     <div class="row">
       <div class="col-md-3">
         <div class="card">
-          <div class="card-header">Tools</div>
+          <div class="card-header">Tasks</div>
           <div class="card-body">
             <div class="d-grid gap-2">
-              <button class="btn btn-primary" @click="addNode('task')">Add Task</button>
-              <button class="btn btn-secondary" @click="addNode('condition')">Add Condition</button>
-              <button class="btn btn-purple" @click="addNode('approval')">Add Approval</button>
+              <button class="btn btn-success" @click="addNode('approval')">
+                <span class="task-icon">✓</span> Approval
+              </button>
+              <button class="btn btn-warning" @click="addNode('review')">
+                <span class="task-icon">👁</span> Review
+              </button>
+              <button class="btn btn-danger" @click="addNode('todo')">
+                <span class="task-icon">📋</span> To Do
+              </button>
+              <button class="btn btn-purple" @click="addNode('notification')">
+                <span class="task-icon">🔔</span> Notification
+              </button>
+              <button class="btn btn-info" @click="addNode('docCollection')">
+                <span class="task-icon">📄</span> Doc Collection
+              </button>
+              <button class="btn btn-secondary" @click="addNode('systemTask')">
+                <span class="task-icon">⚙️</span> System Task
+              </button>
+              <button class="btn btn-brown" @click="addNode('taskCollection')">
+                <span class="task-icon">📑</span> Task Collection
+              </button>
             </div>
           </div>
         </div>
@@ -29,6 +47,7 @@
             :default-viewport="{ x: 0, y: 0, zoom: 1.5 }"
             :nodes="elements"
             :edges="[]"
+            @connect="onConnect"
           >
             <Background v-slot="background" pattern-color="#aaa" gap="8" />
             <MiniMap />
@@ -52,19 +71,44 @@ import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
 import { Controls } from '@vue-flow/controls'
 import { useStore } from './stores/workflow'
-import ApprovalNode from './components/ApprovalNode.vue'
+import {
+  ApprovalNode,
+  ReviewNode,
+  TodoNode,
+  NotificationNode,
+  DocCollectionNode,
+  SystemTaskNode,
+  TaskCollectionNode
+} from './components/nodes'
 
 const store = useStore()
 const elements = ref([])
+const edges = ref([])
+
 const { onPaneReady, fitView } = useVueFlow({
   nodeTypes: {
     approval: ApprovalNode,
+    review: ReviewNode,
+    todo: TodoNode,
+    notification: NotificationNode,
+    docCollection: DocCollectionNode,
+    systemTask: SystemTaskNode,
+    taskCollection: TaskCollectionNode
   },
 })
 
 const addNode = (type) => {
   const newNode = store.createNode(type)
   elements.value = [...elements.value, newNode]
+}
+
+const onConnect = (params) => {
+  const newEdge = {
+    id: `e${params.source}-${params.target}`,
+    source: params.source,
+    target: params.target,
+  }
+  edges.value = [...edges.value, newEdge]
 }
 
 const onResetView = () => {
@@ -100,26 +144,15 @@ html, body, #app {
   height: 100%;
 }
 
-.vue-flow__node {
-  padding: 10px;
-  border-radius: 5px;
-  text-align: center;
-  min-width: 150px;
+.task-icon {
+  margin-right: 8px;
 }
 
-.vue-flow__node.node-task {
-  background-color: #2196F3;
-  color: white;
-}
-
-.vue-flow__node.node-condition {
-  background-color: #FFC107;
-  color: black;
-}
-
-.vue-flow__node.node-start {
-  background-color: #4CAF50;
-  color: white;
+.btn {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 8px 16px;
 }
 
 .btn-purple {
@@ -129,6 +162,16 @@ html, body, #app {
 
 .btn-purple:hover {
   background-color: #7b1fa2;
+  color: white;
+}
+
+.btn-brown {
+  background-color: #795548;
+  color: white;
+}
+
+.btn-brown:hover {
+  background-color: #5d4037;
   color: white;
 }
 </style>
