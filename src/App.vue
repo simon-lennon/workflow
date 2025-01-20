@@ -13,6 +13,7 @@
             <div class="d-grid gap-2">
               <button class="btn btn-primary" @click="addNode('task')">Add Task</button>
               <button class="btn btn-secondary" @click="addNode('condition')">Add Condition</button>
+              <button class="btn btn-purple" @click="addNode('approval')">Add Approval</button>
             </div>
           </div>
         </div>
@@ -51,10 +52,15 @@ import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
 import { Controls } from '@vue-flow/controls'
 import { useStore } from './stores/workflow'
+import ApprovalNode from './components/ApprovalNode.vue'
 
 const store = useStore()
 const elements = ref([])
-const { onPaneReady, fitView } = useVueFlow()
+const { onPaneReady, fitView } = useVueFlow({
+  nodeTypes: {
+    approval: ApprovalNode,
+  },
+})
 
 const addNode = (type) => {
   const newNode = store.createNode(type)
@@ -113,6 +119,16 @@ html, body, #app {
 
 .vue-flow__node.node-start {
   background-color: #4CAF50;
+  color: white;
+}
+
+.btn-purple {
+  background-color: #9c27b0;
+  color: white;
+}
+
+.btn-purple:hover {
+  background-color: #7b1fa2;
   color: white;
 }
 </style>
