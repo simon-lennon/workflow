@@ -43,14 +43,14 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import BaseTaskNode from './BaseTaskNode.vue'
-import { useStore } from '../../stores/workflow'
+import { useWorkflowStore } from '@/stores/workflow'
 
 const props = defineProps({
   id: { type: String, required: true },
   selected: { type: Boolean, default: false }
 })
 
-const store = useStore()
+const store = useWorkflowStore()
 const nodeData = ref({
   assignee: '',
   priority: 'medium',
