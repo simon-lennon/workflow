@@ -81,8 +81,7 @@ import { VueFlow, Panel, useVueFlow } from '@vue-flow/core'
 import { Background } from '@vue-flow/background'
 import { MiniMap } from '@vue-flow/minimap'
 import { Controls } from '@vue-flow/controls'
-import { useStore } from 'pinia'
-import { useWorkflowStore } from './stores/workflow'
+import { useWorkflowStore } from '@/stores/workflow'
 import {
   ApprovalNode,
   ReviewNode,
@@ -91,7 +90,7 @@ import {
   DocCollectionNode,
   SystemTaskNode,
   TaskCollectionNode
-} from './components/nodes'
+} from '@/components/nodes'
 
 const store = useWorkflowStore()
 const elements = ref([])
@@ -160,6 +159,7 @@ const onResetView = () => {
 }
 
 onMounted(() => {
+  // Initialize with a start node
   const startNode = store.createNode('start')
   elements.value = [startNode]
 })
